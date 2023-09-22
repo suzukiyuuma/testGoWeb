@@ -1,22 +1,37 @@
 package main
 
-import "fmt"
-import "net/http"
+import (
+	"fmt"
+    "net/http"
+    "encoding/json"
+)
 
-const baseMessage = "Hello World"
+type User struct {
+    Name string `json:"name"`
+}
 
 func handler(w http.ResponseWriter, r *http.Request) {
-    name := r.FormValue("name")
-    if name == "" {
-        fmt.Fprint(w, baseMessage)
+    if r.Method != http.MethodPost {
+		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
         return
     }
 
-    fmt.Fprintf(w, "%s, %s", baseMessage, name)
+    name := r.FormValue("name")
+    if name == "" {
+		http.Error(w, "name is required", http.StatusBadRequest)
+        return
+    } 
+
+	user := User{
+		Name: name,
+	}
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	json.NewEncoder(w).Encode(user)
+
 }
 
-func main(){
-	fmt.Println("webサーバー立ち上げ開始")
-	http.HandleFunc("/", handler)
-	http.ListenAndServe(":8080", nil)
+func main() {
+	fmt.Println("Webサーバー立ち上げ開始")
+    http.HandleFunc("/", handler)
+    http.ListenAndServe(":8080", nil)
 }
