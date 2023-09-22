@@ -2,36 +2,24 @@ package main
 
 import (
 	"fmt"
-    "net/http"
-    "encoding/json"
+	"html/template"
+	"log"
+	"net/http"
 )
 
-type User struct {
-    Name string `json:"name"`
-}
-
-func handler(w http.ResponseWriter, r *http.Request) {
-    if r.Method != http.MethodPost {
-		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
-        return
-    }
-
-    name := r.FormValue("name")
-    if name == "" {
-		http.Error(w, "name is required", http.StatusBadRequest)
-        return
-    } 
-
-	user := User{
-		Name: name,
+func viewHandler(w http.ResponseWriter, r *http.Request) {
+	html, err := template.ParseFiles("view.html")
+	if err != nil {
+		log.Fatal(err)
 	}
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	json.NewEncoder(w).Encode(user)
-
+	if err := html.Execute(w, nil); err != nil {
+		log.Fatal(err)
+	}
+	// fmt.Fprintf(w, "Hello World")
 }
 
 func main() {
-	fmt.Println("Webサーバー立ち上げ開始")
-    http.HandleFunc("/", handler)
-    http.ListenAndServe(":8080", nil)
+	http.HandleFunc("/view", viewHandler)
+	fmt.Println("Server Start Up........")
+	log.Fatal(http.ListenAndServe("192.168.33.10:8080", nil))
 }
